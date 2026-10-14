@@ -1,0 +1,13 @@
+# Registro de riesgos — G1
+
+Actualizado: 2026-10-14T06:35:27Z. Tier del goal: T2. Revisar en el gate nombrado; no asumir mitigación completada hasta ver evidencia.
+
+| ID | Riesgo (probabilidad / impacto) | Trigger | Owner | Mitigación verificable / criterio de salida | Review due |
+|---|---|---|---|---|---|
+| R-G1-01 | Playwright o binarios del navegador no disponibles (Media / Alta); el journey no podrá verificarse en browser. | Al preparar F6, el test no instala/lanza navegador en el entorno objetivo. | `qa-automation` | Confirmar comando/browser en un entorno reproducible antes del gate F6; si no está disponible, bloquear sign-off browser y elevar la precondición sin simular resultado. Cerrar con evidencia del browser journey completo. | Antes de F6 |
+| R-G1-02 | `localStorage` carece de transacciones/lock entre tabs (Alta / Alta); dos instancias pueden reclamar y aplicar el mismo gap offline. | Prueba simultánea en dos tabs produce dos writes/aplicaciones o lease no se recupera. | `frontend-engineer`; reviewer `tech-lead`, gate `security-engineer` | Implementar claim/lease explícito con comportamiento de expiración/recovery; test determinista de dos tabs prueba exactamente una aplicación y save válido ante fallo. Fail closed si no se puede demostrar exclusión. | Gate F4 |
+| R-G1-03 | No hay `.git` en workspace (Cierta / Media); F7 no puede inspeccionar diff ni preparar resumen real. | F1–F6 completadas y no existe repository Git utilizable. | `project-manager` | No inicializar Git. Mantener F7 bloqueada; pedir al humano habilitar repo antes del cierre. Aun con repo, preparar solamente resumen/propuesta; commit/deploy requieren autorización expresa y no son parte de esta fase. | Antes de F7 |
+| R-G1-04 | Importación JSON/envelope o recovery podría aceptar estado inválido o sustituir save válido (Baja / Alta). | Import malformed/future version o storage failure altera estado válido o genera exposición al DOM. | `frontend-engineer`; gate `security-engineer` | Validar envelope/versión antes de escritura; tests de corrupt/future/import round-trip y storage error; security review documentada; salida exige conservar snapshot anterior y error genérico visible. | Gate F3 |
+
+## Riesgo de coordinación asociado (fuera de código)
+- HO-20261014-002 fue emitido a las 2026-10-14T06:35:27Z con `due: 2026-10-14T06:30:00Z` por fecha expresamente solicitada. El due está vencido al emitirse. Owner: `project-manager`; mitigación: mantener el timestamp solicitado, notificar al FE en el request y reforecast sin cambiar unilateralmente la fecha. No es un bloqueo técnico de F1, pero el SLA de acuse no puede considerarse futuro.
