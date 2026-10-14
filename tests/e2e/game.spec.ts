@@ -69,9 +69,12 @@ async function preloadSave(
 }
 
 test("earns resources, purchases a real upgrade, and reloads the saved level", async ({ page }) => {
+  await page.clock.pauseAt(new Date(1_800_000_000_000));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "La materia encuentra su ritmo." })).toBeVisible();
-  await expect(page.locator(".resource-value")).toContainText(/25\.\d{2}/);
+  await expect(page.locator(".resource-value")).toContainText("25.00");
+  await page.clock.fastForward(1_000);
+  await expect(page.locator(".resource-value")).toContainText("29.00");
 
   const skipLink = page.getByRole("link", { name: "Saltar a la simulación" });
   await page.keyboard.press("Tab");
@@ -98,6 +101,7 @@ test("earns resources, purchases a real upgrade, and reloads the saved level", a
 });
 
 test("rapid repeated purchase events never spend the same balance twice", async ({ page }) => {
+  await page.clock.pauseAt(new Date(1_800_000_000_000));
   await page.goto("/");
   const seedArray = page.locator(".upgrade-row").filter({
     has: page.getByRole("heading", { name: "Seed Array", exact: true }),
@@ -110,7 +114,7 @@ test("rapid repeated purchase events never spend the same balance twice", async 
   });
 
   await expect(seedArray.getByText("NIVEL 2 / 100000")).toBeVisible();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("Not enough charge");
   const charge = await page.locator(".resource-value").innerText();
   expect(Number.parseFloat(charge.replace(/[^\d.]/g, ""))).toBeGreaterThanOrEqual(0);
 });
@@ -157,13 +161,15 @@ test("credits capped offline production once and persists the updated timestamp"
 });
 
 test("unlocks Echo Loom at the production milestone and purchases the second resource tier", async ({ page }) => {
+  const savedAt = 1_800_000_000_000;
+  await page.clock.pauseAt(new Date(savedAt));
   await preloadSave(page, serializedState({
     resources: { charge: "500", echo: "0" },
     runChargeEarned: "240",
     lifetimeChargeEarned: "240",
     runElapsedSeconds: "60",
     totalElapsedSeconds: "60",
-  }));
+  }), savedAt);
   await page.goto("/");
 
   const echoLoom = page.locator(".upgrade-row").filter({
@@ -171,6 +177,8 @@ test("unlocks Echo Loom at the production milestone and purchases the second res
   });
   await expect(echoLoom).toContainText("Bloqueado · Genera 250 Charge en esta partida.");
   const buyButton = echoLoom.getByRole("button", { name: "Comprar 1" });
+  await expect(buyButton).toBeDisabled();
+  await page.clock.fastForward(2_500);
   await expect(buyButton).toBeEnabled();
   await buyButton.click();
   await expect(echoLoom.getByText("NIVEL 1 / 50")).toBeVisible();
@@ -251,6 +259,34 @@ test("passes automated WCAG AA checks in the default game state", async ({ page 
       .analyze();
     expect(results.violations).toEqual([]);
   }
+});
+
+test("reduced motion stops decorative frames while economic time keeps advancing", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame.bind(window);
+    let requests = 0;
+    Object.defineProperty(window, "__requestedAnimationFrames", {
+      get: () => requests,
+    });
+    window.requestAnimationFrame = (callback) => {
+      requests += 1;
+      return originalRequestAnimationFrame(callback);
+    };
+  });
+
+  await page.goto("/");
+  const initialCharge = await page.locator(".resource-value").innerText();
+  await page.waitForTimeout(750);
+  const result = await page.evaluate(() => ({
+    requests: (window as Window & { __requestedAnimationFrames?: number }).__requestedAnimationFrames ?? 0,
+    reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  }));
+  const laterCharge = await page.locator(".resource-value").innerText();
+
+  expect(result.reducedMotion).toBe(true);
+  expect(result.requests).toBe(0);
+  expect(laterCharge).not.toBe(initialCharge);
 });
 
 test("prevents a second tab from simulating until the active tab releases its lease", async ({ page }) => {
