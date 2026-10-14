@@ -112,3 +112,28 @@ copilot-instructions.md
 /.cursor/
 /.opencode/
 /.windsurf/
+/.session-state/
+/.ai/
+/.codex/
+/.llm/
+/.project-state/
+/.tooling/
+/.tmp-agents/
+/.local-tools/
+
+# Local workspace/session metadata and generated AI artifacts
+*.agent.md
+*.instructions.md
+*.prompt.md
+*.copilot.json
+*.copilot.*
+*.session.json
+*.state.json
+*.local.*
+*.workspace-state
+
+# Optional local tool caches and generated histories
+/.history/
+/.worktree/
+/.sandbox/
+/.tmp/

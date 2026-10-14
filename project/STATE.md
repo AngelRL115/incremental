@@ -1,47 +1,57 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-14. Evento: implementación del MVP browser y validación local de Phase 3.
+Última actualización: 2026-10-14. Evento: continuación de G1; definición
+propuesta de G2 y preview de G3.
 
 ## G1 — MVP jugable de navegador
-- Tipo: feature P0; `risk_tier: T2` por UI de usuario.
-- Goal/plan ejecutable: `goals/G1.md` v2. Alcance y decisión de identidad preservados; no reabrir scope.
-- Producto: `product-owner` (accountable); coordinación/plan: `project-manager`; fases F1–F5: `frontend-engineer`; F6: `qa-automation` con sign-off de `qa-tester`; cierre F7: `git-specialist` (solo preparación).
-- Estado: F1–F4 implementadas; F5 con axe/teclado/responsive/visual verificados; F6 automatizada y verde. G1 permanece abierto hasta revisión con lector de pantalla, sign-off de `qa-tester` y cierre F7.
-- Gates T2: evidencia acotada de seguridad, WCAG/visual y browser está en `project/security-review-2026-10-14.md`, `a11y/audit-2026-10-14.md` y `design/visual-qa/2026-10-14.md`. Sin gate de prod/release.
-- DoD canónica: `project/DEFINITION-OF-DONE.md`.
 
-## Señales, roles incluidos y exclusiones
-- Señales positivas: interfaz web de usuario, Canvas 2D, visual identity “Observatorio editorial” aprobada, estado persistente/import/export local, offline/prestige, accesibilidad y browser QA.
-- Incluidos en el DAG: `frontend-engineer`, `product-designer`, `ui-designer`, `tech-lead`, `security-engineer` (review limitada), `accessibility-specialist` (gate), `qa-automation`, `qa-tester` (gate), `git-specialist` (fase final previa a Done). `product-owner` mantiene autoridad de prioridad/scope; `project-manager` coordina.
-- Excluidos con razón:
-  - `backend-engineer`, `database-developer`, `dba`: no backend, API ni base de datos.
-  - `sre`, `devops-engineer`, `release-manager`, `support-engineer`: sin producción, despliegue, SLO ni lanzamiento público.
-  - `mobile-engineer`: UI web responsive; no app nativa/híbrida.
-  - `fullstack-integrator`: no hay contrato FE↔BE.
-  - `data-analyst`, `data-engineer`, `growth-analyst`, `ai-ml-engineer`: sin analítica, ETL, experimento o ML; tracking fuera de scope.
-  - `legal-compliance`, `marketing-strategist`, `content-marketer`: sin captura de PII/ventas/marketing ni lanzamiento público.
-  - `ux-researcher`: no hay hipótesis de usuario que bloquee el P0; no se reabre la dirección ya aprobada.
-  - `scrum-master`: la coordinación de un goal único es responsabilidad PM, sin necesidad de facilitación separada.
-- Gate Security no se excluye: rol consultivo y veto acotado a import/save y claim offline multi-tab, sin auth/PII.
+- Tipo: feature P0, `risk_tier: T2`.
+- Alcance: MVP local single-player; Phase 4 añadió seis registros narrativos y
+  desbloqueos declarativos sin alterar fórmulas de producción.
+- Estado de implementación: F1–F6 construidas. `qa-tester` registró sign-off
+  funcional automatizado. Los fixtures E2E sensibles al reloj se estabilizaron;
+  validación final conjunta 2026-10-14: build, 34 unit tests, balance y 10/10
+  E2E Chromium verdes.
+- Estado del goal: **Done para el alcance local single-player**, cerrado
+  2026-10-14.
+  axe/teclado/reflow/contraste tienen evidencia sin findings automatizados.
+  No se realizó VoiceOver/NVDA; el usuario decidió en D12 que no sea requisito
+  de cierre de G1. Esa decisión no afirma que el lector se haya probado ni que
+  exista certificación WCAG integral.
+- Security T2: revisión acotada de guardado/importación/lease realizada en el
+  workspace. No equivale a revisión completa del historial, CI o producción.
+- Git: repo en `main`, commit inicial `0129063` creado con autorización
+  humana; no se autorizó deploy. No usar el commit como evidencia de QA.
+- Evidencia: `goals/G1.md`, `project/DEFINITION-OF-DONE.md`,
+  `a11y/audit-2026-10-14.md`, `design/visual-qa/2026-10-14.md`,
+  `docs/phase-4-audit.md`, `docs/phase-4-balance-report.md`,
+  `docs/phase-4-performance-report.md` y `docs/release-checklist.md`.
 
-## Evidencia baseline y límites observados
-- Baseline bootstrap: `npm test` (23 tests). Validación Phase 3: `npm run build` pasó; `npm test` pasó (29 tests); `npm run balance` pasó y alcanzó los hitos configurados; `npm run test:e2e` pasó (9 escenarios); `npm audit` informó 0 vulnerabilidades.
-- Playwright/Chromium quedó instalado para validar en este equipo; instrucciones reproducibles están en `README.md`.
-- axe-core no encontró violaciones en `/` ni en los diálogos probados; lector de pantalla real no se ejecutó y permanece como pendiente de sign-off.
-- `project/ARCHITECTURE.md` preserva el baseline previo; Phase 3 agregó Vite/React/Playwright como defaults reversibles acordados, sin modificar la arquitectura del motor.
-- Workspace observado sin `.git`; no inicializar Git ni hacer commit/deploy.
+## Próximo — G2
 
-## Riesgos / bloqueos
-- `R-G1-01` resuelto en este equipo: Chromium instalado y suite E2E ejecutada; otros equipos deben seguir `README.md`.
-- `R-G1-02` mitigado y probado: lease local, conflicto visible y reintento tras liberar pestaña. `localStorage` sigue siendo almacenamiento local de mismo origen, no una frontera de seguridad.
-- `R-G1-03` Git ausente impide preparar diff real para F7; dueño de seguimiento `project-manager`; no bloquea F1, pero F7 queda bloqueada hasta disponibilidad de repo Git. El commit/deploy permanece prohibido sin autorización, sin bloquear la preparación del diff.
-- `R-G1-04` histórico: el due solicitado para HO-002 ya había vencido al emitirse; la fecha se conserva sin cambios.
-- Pendientes de cierre: recorrido de VoiceOver/NVDA y sign-off humano de `qa-tester`; no se simularon.
+- Propuesta en `goals/G2.md`: validar comprensión, onboarding y ritmo con
+  playtest formativo y ajustar solo a partir de hallazgos.
+- Estado: `proposed`; no iniciar reclutamiento ni cambios de balance hasta que
+  el Product Owner fije la pregunta y las bandas de aceptación y G1 cierre.
+- Guardrails: no cuentas, backend, telemetry, PII ni publicación pública.
 
-## Handoffs
-- `HO-20261014-001`: `product-owner` → `project-manager`, `delivery`, `accepted` a las 2026-10-14T06:35:27Z; artefactos recibidos y planificación iniciada.
-- `HO-20261014-002`: `project-manager` → `frontend-engineer`, `request`, `accepted`; ejecución extendida por dependencias aprobadas de G1.
-- Próximo: obtener sign-offs pendientes y desbloquear F7 cuando el workspace pertenezca a un repo Git; no iniciar Phase 4 ni publicar.
+## Adelanto — G3
+
+- `goals/G3-preview.md` propone estudiar una PWA/beta web controlada, reversible
+  y sin analytics como default.
+- No es goal aprobado ni autorización de hosting/deploy. Requiere resultado de
+  G2, decisión humana de distribución/presupuesto/privacidad y readiness gates.
+
+## Riesgos y próximos pasos
+
+1. Conservar evidencia del cierre de G1 y límites de la excepción D12; cualquier
+   cambio de alcance debe reabrir los gates afectados.
+2. Obtener decisión del Product Owner sobre G2-0: pregunta, target bands,
+   reclutamiento y tratamiento de notas antes de iniciar el playtest.
+3. No empezar PWA, hosting, SEO ni publicidad hasta autorización de G3.
 
 ## Forecast
-El MVP P0 es ejecutable localmente. G1 no se declara Done mientras falten el sign-off manual de QA/a11y y la preparación de F7; el workspace no es un repo Git.
+
+El producto corre localmente y G1 está cerrado para su alcance single-player.
+G2 sigue propuesto; G3 es solo un preview condicionado. El cierre de G1 no
+autoriza deploy público.

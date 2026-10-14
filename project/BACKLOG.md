@@ -10,8 +10,8 @@ Prioridad: `product-owner`; coordinación: `project-manager`. Fuente: idea human
 | B2 | Comprar y desbloquear progreso | frontend-engineer | Sí; economy engine | Implementado; compra/unlock probados |
 | B3 | Guardar, recargar e importar/exportar | frontend-engineer | Sí; límites de datos definidos | Implementado; import/export/recovery probados |
 | B4 | Retornar offline y completar prestigio | frontend-engineer | Sí; engine API estable | Implementado; offline/prestige/multi-tab probados |
-| B5 | Usar UI responsive/accesible y Canvas eficiente | frontend-engineer | Sí; visual identity y a11y gates | Implementado; VoiceOver/NVDA pendiente |
-| B6 | QA del journey completo y smoke de navegador | qa-automation | Sí; fixture/reset reproducible | 9 E2E verdes; sign-off `qa-tester` pendiente |
+| B5 | Usar UI responsive/accesible y Canvas eficiente | frontend-engineer | Sí; visual identity y a11y gates | Implementado; axe/teclado/reflow documentados; VoiceOver/NVDA no requerido para G1 por D12 |
+| B6 | QA del journey completo y smoke de navegador | qa-automation | Sí; fixture/reset reproducible | Done; sign-off QA y 10/10 E2E Chromium |
 
 ### B1
 ```yaml

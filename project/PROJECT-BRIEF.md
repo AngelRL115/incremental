@@ -12,9 +12,11 @@ Fuente: `idea_descripcion.md` y prompts humanos Phase 1–3. No hay un Master Pr
 - P1: playtest/balance y refinamiento de tutorial, recuperación e interacción.
 - Non-goals: backend/cuentas/cloud, pagos/ads, analítica, multi-prestige, eventos temporales, copia de ISEPS.
 
-## Stack
-- Origen: TypeScript/decimal.js/Vitest del repo; Vite+React+TS y Playwright son defaults reversibles recomendados, pendientes de implementar/verificar.
-- FE: Vite + React + TypeScript; BE/DB: ninguno; infra: build estático local; test: Vitest + Playwright.
+## Stack y estado
+- FE: Vite + React + TypeScript; engine de dominio TypeScript/decimal.js; Canvas 2D.
+- BE/DB: ninguno; persistencia en localStorage con envelope browser v1 y payload económico v2.
+- Tooling: Vitest, Playwright/Chromium; build estático en `dist/`.
+- Resultado local verificado: build, 34 unit tests, 9 E2E y balance pasan.
 - Topología: single-app.
 
 ## Datos y seguridad
@@ -38,4 +40,11 @@ Fuente: `idea_descripcion.md` y prompts humanos Phase 1–3. No hay un Master Pr
 1. Partida nueva → producción y pulso → comprar mejora → ver tasa mayor → desbloquear Echo → guardar/recargar → recibir resumen offline una vez → previsualizar/confirmar prestigio → adquirir Conduit → continuar.
 
 ## Continuación
-`project/BACKLOG.md`, `goals/G1.md`, `project/ROLE-PACKS.md`, `project/STATE.md`; planning corresponde a `project-manager`.
+- G1 está cerrado para el alcance local single-player, con sign-off de QA y
+  validación final verde (build, 34 unit tests, balance, 10 E2E Chromium).
+  VoiceOver/NVDA no se recorrió y, por decisión humana D12, no fue gate de
+  cierre; consultar `project/STATE.md` y `project/DEFINITION-OF-DONE.md`.
+- G2 propuesto: `goals/G2.md`; no iniciar hasta cerrar G1 y acordar criterios
+  de playtest con `product-owner`.
+- G3 condicionado y no autorizado: `goals/G3-preview.md`; no publicar ni
+  configurar hosting sin decisión humana.
