@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-17. Evento: QA dio sign-off funcional a G2-1.8; validación PO G2-1.9 pendiente.
+Última actualización: 2026-10-17. Evento: el slice G2 se publicó e integró por fast-forward en `main` como `bb52f30`; validación PO G2-1.9 pendiente.
 
 ## G1 — MVP jugable de navegador
 
@@ -57,8 +57,8 @@
   prod/hosting), `release-manager` (sin release), `data-analyst`,
   `data-engineer` y `growth-analyst` (sin datos/telemetría),
   `legal-compliance` (sin tratamiento nuevo de datos), marketing y soporte
-  (sin lanzamiento/soporte), y `git-specialist` hasta el handoff final; no hay
-  un commit autorizado.
+  (sin lanzamiento/soporte). `git-specialist` publicó e integró el slice G2;
+  no hay autorización de release ni deploy.
 - Gates: AC-SP-01…AC-SP-07, pruebas de dominio/migración, build, balance,
   Playwright/axe y diff check; luego validación humana de guía por PO. Ningún
   check sustituye consentimiento ni autorización posterior de convocatoria
@@ -81,6 +81,10 @@
   y permanencia. Handoff propuesto: `project/handoffs/HO-20261017-004.yaml`;
   el receptor debe acusar antes de revisar. No preparar ni enviar invitaciones
   ni contactar participantes mientras siga pendiente.
+- Git: `bb52f30 feat(g2): add permanent specialization guide` se publicó en
+  `origin/feat/g2-player-validation-scope` y se integró por fast-forward desde
+  `ca22240` en `origin/main`. El XAPK de investigación (144644480 bytes) quedó
+  sin seguimiento y fuera del commit. Handoff: `HO-20261017-005.yaml`.
 
 ## Adelanto — G3
 

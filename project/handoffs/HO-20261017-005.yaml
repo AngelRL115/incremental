@@ -1,0 +1,29 @@
+handoff:
+  id: HO-20261017-005
+  from: project-manager
+  to: git-specialist
+  goal_id: G2
+  type: delivery
+  summary: "Publicar el slice G2 revisado e integrarlo mediante fast-forward en la rama primaria existente."
+  payload:
+    artifacts:
+      - "commit bb52f30"
+      - "origin/feat/g2-player-validation-scope"
+      - "origin/main"
+    acceptance_criteria:
+      - "Crear un único commit coherente del slice G2 sin incluir artefactos binarios ajenos."
+      - "Publicar la rama de trabajo sin force-push."
+      - "Integrar mediante fast-forward en main si origin lo permite, sin PR ni bypass de protecciones."
+    evidence:
+      - "bb52f30 feat(g2): add permanent specialization guide."
+      - "origin/feat/g2-player-validation-scope publicado en bb52f30."
+      - "origin/main avanzó por fast-forward de ca22240 a bb52f30."
+      - "ISEPS+Idle+Particle+Simulator_0.8.4.8.6996_APKPure.xapk (144644480 bytes) quedó sin seguimiento y fuera del índice."
+      - "git diff --cached --check pasó después de corregir tres espacios finales en la documentación."
+    risks:
+      - "La integración no cambia los gates pendientes de G2-1.9 ni autoriza convocatorias o sesiones."
+  status: completed
+  needs_human: false
+  created_at: "2026-10-17T18:46:00-06:00"
+  accepted_at: "2026-10-17T18:46:00-06:00"
+  completed_at: "2026-10-17T18:49:00-06:00"
