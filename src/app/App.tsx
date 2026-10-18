@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { driver, type Driver } from "driver.js";
 import {
   ACHIEVEMENTS,
   GAME_CONFIG,
@@ -13,14 +14,20 @@ import {
   getPrestigePreview,
   getProductionRates,
   getPurchaseQuote,
+  getSpecializationQuote,
   getUpgradeUnlockStatus,
+  buySpecialization,
   permanentUpgradeCost,
   performPrestige,
+  specializationCost,
+  setAutomationEnabled,
   upgradeCostAtLevel,
   type GameState,
+  type SpecializationPath,
   type UpgradeId,
 } from "../game/index.js";
 import { ParticleField } from "../renderer/ParticleField.js";
+import { GAME_GUIDE_STEPS } from "./game-guide.js";
 import { useGameSession } from "./use-game-session.js";
 
 const UPGRADE_ORDER: readonly UpgradeId[] = [
@@ -54,10 +61,28 @@ const UPGRADE_COPY: Record<UpgradeId, { title: string; description: string }> = 
   },
 };
 
+const SPECIALIZATION_OPTIONS: readonly {
+  path: SpecializationPath;
+  title: string;
+  effect: string;
+}[] = [
+  {
+    path: "charge",
+    title: "Vector de Charge",
+    effect: "Multiplica Charge/s ×1.15 por rango.",
+  },
+  {
+    path: "echo",
+    title: "Resonancia Echo",
+    effect: "Multiplica Echo/s ×1.25 por rango.",
+  },
+];
+
 export default function App() {
   const [reducedEffects, setReducedEffects] = useState(false);
   const [milestonePulse, setMilestonePulse] = useState(0);
   const [prestigeDialogOpen, setPrestigeDialogOpen] = useState(false);
+  const guideRef = useRef<Driver | null>(null);
   const session = useGameSession();
   const game = session.game;
   const rates = useMemo(() => game ? getProductionRates(game) : null, [game]);
@@ -65,6 +90,38 @@ export default function App() {
   const canBuyConduit = Boolean(
     game && conduitCost && game.availablePrestigePoints.greaterThanOrEqualTo(conduitCost),
   );
+
+  useEffect(() => () => guideRef.current?.destroy(), []);
+
+  const startGameGuide = () => {
+    guideRef.current?.destroy();
+    const guide = driver({
+      steps: GAME_GUIDE_STEPS,
+      animate: !reducedEffects && !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      allowClose: true,
+      allowKeyboardControl: true,
+      allowScroll: true,
+      disableActiveInteraction: true,
+      overlayColor: "rgba(3, 12, 15, 0.82)",
+      overlayOpacity: 0.82,
+      stagePadding: 8,
+      stageRadius: 7,
+      popoverClass: "space-idle-tour",
+      showProgress: true,
+      progressText: "{{current}} de {{total}}",
+      nextBtnText: "Siguiente",
+      prevBtnText: "Anterior",
+      doneBtnText: "Terminar",
+      closeBtnLabel: "Cerrar guía",
+      onPopoverRender: () => {
+        const guideControl = document.getElementById("driver-dummy-element");
+        guideControl?.setAttribute("role", "button");
+        guideControl?.setAttribute("aria-label", "Guía interactiva");
+      },
+    });
+    guideRef.current = guide;
+    guide.drive();
+  };
 
   return (
     <main className="observatory-shell">
@@ -77,6 +134,7 @@ export default function App() {
         <div className="header-meta">
           <span className="live-indicator"><i /> {session.status === "ready" ? "SIMULACIÓN ACTIVA" : "SIMULACIÓN EN PAUSA"}</span>
           <button
+            data-tour="reduced-effects"
             className="quiet-toggle"
             type="button"
             aria-pressed={reducedEffects}
@@ -85,7 +143,7 @@ export default function App() {
             {reducedEffects ? "Efectos reducidos: sí" : "Reducir efectos"}
           </button>
           {game && (
-            <button className="quiet-toggle" type="button" onClick={session.exportSave}>
+            <button data-tour="export-save" className="quiet-toggle" type="button" onClick={session.exportSave}>
               Exportar partida
             </button>
           )}
@@ -129,8 +187,11 @@ export default function App() {
           <p className="scene-description">
             Cada partícula sigue una trayectoria. Cada decisión cambia la escala del sistema.
           </p>
+          <button className="guide-launch" type="button" onClick={startGameGuide}>
+            Guía del juego <span aria-hidden="true">→</span>
+          </button>
         </div>
-        <div className="scene-frame">
+        <div className="scene-frame" data-tour="particle-scene">
           <ParticleField reducedEffects={reducedEffects} milestonePulse={milestonePulse} onError={session.setRendererError} />
           <div className="scene-coordinate" aria-hidden="true">N 04.08 · E 18.25</div>
           <div className="scene-caption">
@@ -141,18 +202,18 @@ export default function App() {
       </section>
 
       <section className="readout" aria-label="Estado de la simulación">
-        <div className="readout-primary">
+        <div className="readout-primary" data-tour="charge-resource">
           <p className="eyebrow">RECURSO DISPONIBLE</p>
           <p className="resource-value"><span className="resource-orb" />{formatGameNumber(game.resources.charge)}<span className="resource-unit">CHARGE</span></p>
           <p className="rate-line">Producción <strong>{formatGameNumber(rates.charge)} Charge/s</strong></p>
         </div>
-        <div className="readout-secondary">
-          <div>
+        <div className="readout-secondary" data-tour="secondary-resources">
+          <div data-tour="echo-resource">
             <span className="eyebrow">ECHO</span>
             <strong>{formatGameNumber(game.resources.echo)}</strong>
             <small>{formatGameNumber(rates.echo)} / s</small>
           </div>
-          <div>
+          <div data-tour="resonance-resource">
             <span className="eyebrow">RESONANCIA</span>
             <strong>{formatGameNumber(game.availablePrestigePoints)}</strong>
             <small>{game.prestigeCount} {game.prestigeCount === 1 ? "reinicio" : "reinicios"}</small>
@@ -160,7 +221,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="play-controls" aria-label="Acciones de la simulación">
+      <section className="play-controls" data-tour="manual-pulse" aria-label="Acciones de la simulación">
         <div>
           <p className="eyebrow">ACCIÓN MANUAL</p>
           <p className="supporting-copy">Un pulso inyecta Charge sin adelantar el reloj.</p>
@@ -171,29 +232,37 @@ export default function App() {
         }}>Emitir pulso <span>+2 Charge</span></button>
       </section>
 
-      <section className="progress-section" aria-labelledby="progress-title">
-        <div className="section-heading">
+      <section className="progress-section" data-tour="milestones" aria-labelledby="progress-title">
+        <div className="section-heading" data-tour="upgrades-heading">
           <div><p className="eyebrow">LECTURA DEL SISTEMA</p><h2 id="progress-title">Siguiente umbral</h2></div>
           <span className="progress-count">{getMilestoneIds(game).length} / {GAME_CONFIG.milestones.length} hitos</span>
         </div>
         <MilestoneProgress game={game} />
       </section>
 
-      <section className="upgrades-section" aria-labelledby="upgrades-title">
-        <div className="section-heading">
+      <section className="upgrades-section" data-tour="upgrades" aria-labelledby="upgrades-title">
+        <div className="section-heading" data-tour="chronicle-heading">
           <div><p className="eyebrow">INSTRUMENTOS DISPONIBLES</p><h2 id="upgrades-title">Mejoras</h2></div>
           {game.automationEnabled["seed-array-auto"] && <span className="automation-state">AUTOPILOT ACTIVO</span>}
         </div>
         <div className="upgrade-list">
           {UPGRADE_ORDER.map((id) => (
-            <UpgradeRow key={id} game={game} id={id} onBuy={(quantity) => {
-              session.runAction((state) => quantity === "max" ? buyMaxAffordable(state, id) : buyUpgrade(state, id));
-            }} />
+            <UpgradeRow
+              key={id}
+              game={game}
+              id={id}
+              onBuy={(quantity) => {
+                session.runAction((state) => quantity === "max" ? buyMaxAffordable(state, id) : buyUpgrade(state, id));
+              }}
+              onSetAutomation={(enabled) => {
+                session.runAction((state) => setAutomationEnabled(state, enabled));
+              }}
+            />
           ))}
         </div>
       </section>
 
-      <section className="chronicle-section" aria-labelledby="chronicle-title">
+      <section className="chronicle-section" data-tour="chronicle" aria-labelledby="chronicle-title">
         <div className="section-heading">
           <div><p className="eyebrow">ARCHIVO DEL OBSERVATORIO</p><h2 id="chronicle-title">Crónica de frecuencia</h2></div>
           <span className="progress-count">{game.achievements.length} / {ACHIEVEMENTS.length} registros</span>
@@ -212,11 +281,11 @@ export default function App() {
         </ul>
       </section>
 
-      <section className="prestige-section" aria-labelledby="prestige-title">
+      <section className="prestige-section" data-tour="prestige" aria-labelledby="prestige-title">
         <div>
           <p className="eyebrow">RESONANCIA · RESET PERMANENTE</p>
           <h2 id="prestige-title">Comenzar una nueva frecuencia</h2>
-          <p className="supporting-copy">Al reiniciar se restablecen Charge, Echo y las mejoras de esta run. Conduit y los puntos de Resonancia se conservan.</p>
+          <p className="supporting-copy">Al reiniciar se restablecen Charge, Echo y las mejoras de esta run. Conduit, especialización y los RP no gastados se conservan.</p>
         </div>
         {getPrestigePreview(game).eligible ? (
           <button className="action-button" type="button" onClick={() => setPrestigeDialogOpen(true)}>
@@ -229,19 +298,90 @@ export default function App() {
           <div className="conduit-row">
             <div>
               <strong>Conduit permanente · nivel {game.permanentLevels.conduit}</strong>
-              <small>Multiplica Charge ×1.25 por nivel. Coste: {formatGameNumber(conduitCost)} RP.</small>
+              <small>Multiplica Charge ×1.25 por nivel. Coste: {formatGameNumber(conduitCost)} RP compartidos con especialización.</small>
               {!canBuyConduit && <small>Faltan {formatGameNumber(conduitCost.minus(game.availablePrestigePoints))} RP.</small>}
             </div>
             <button className="quiet-toggle" type="button" disabled={!canBuyConduit} onClick={() => session.runAction(buyPermanentConduit)}>Comprar Conduit</button>
           </div>
         )}
+        <section
+          className="specialization-panel"
+          data-tour="specialization"
+          aria-labelledby="specialization-title"
+        >
+          <div className="specialization-heading">
+            <div>
+              <p className="eyebrow">TRAYECTORIA · ELECCIÓN PERMANENTE</p>
+              <h3 id="specialization-title">Especialización</h3>
+            </div>
+            <p>Resonancia disponible: <strong>{formatGameNumber(game.availablePrestigePoints)} RP</strong></p>
+          </div>
+          <p className="supporting-copy">
+            Tras el primer prestigio, invierte RP en una ruta de tres rangos.
+            Cada rango cuesta 1, 2 y 3 RP, respectivamente. La primera compra
+            fija la ruta; los RP invertidos dejan de estar disponibles para
+            Conduit y la elección no se puede revertir.
+          </p>
+          <ol className="specialization-paths">
+            {SPECIALIZATION_OPTIONS.map(({ path, title, effect }) => {
+              const quote = getSpecializationQuote(game, path);
+              const selected = game.specialization.path === path;
+              const excluded = game.specialization.path !== null && !selected;
+              const atMaximum =
+                game.specialization.level >= GAME_CONFIG.specialization.maxLevel;
+              const nextCost = atMaximum
+                ? undefined
+                : specializationCost(game.specialization.level);
+              const stateText = selected
+                ? `Elegida · rango ${game.specialization.level} de ${GAME_CONFIG.specialization.maxLevel}${!quote.allowed && quote.cost ? " · saldo insuficiente" : ""}`
+                : excluded
+                  ? "Ruta descartada al fijar la otra especialización."
+                  : game.prestigeCount === 0
+                    ? "Bloqueada hasta el primer prestigio."
+                    : quote.allowed
+                      ? "Disponible."
+                      : `Saldo insuficiente. ${quote.reason ?? ""}`.trim();
+              const actionLabel = selected ? "Mejorar" : "Elegir";
+              return (
+                <li
+                  className={`specialization-path${selected ? " specialization-path-selected" : ""}`}
+                  data-path={path}
+                  key={path}
+                >
+                  <div className="specialization-path-copy">
+                    <h4>{title}</h4>
+                    <p>{effect}</p>
+                    <small>
+                      {nextCost === undefined
+                        ? `Nivel máximo · ${stateText}`
+                        : excluded
+                          ? stateText
+                          : `${stateText ?? "No disponible."} Próximo rango ${game.specialization.level + 1}: ${formatGameNumber(nextCost)} RP.`}
+                    </small>
+                  </div>
+                  <button
+                    className="quiet-toggle"
+                    type="button"
+                    disabled={!quote.allowed}
+                    aria-label={`${actionLabel} ${title}${nextCost === undefined ? "" : ` · ${formatGameNumber(nextCost)} RP`}`}
+                    onClick={() => session.runAction((state) => buySpecialization(state, path))}
+                  >
+                    {nextCost === undefined
+                      ? "Nivel máximo"
+                      : `${actionLabel} · ${formatGameNumber(nextCost)} RP`}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
       </section>
 
       <footer className="statusline">
-        <span>{session.saveLabel}</span>
+        <span data-tour="save-status">{session.saveLabel}</span>
         <div className="footer-actions">
-          <label className="file-button">Importar partida<input type="file" accept="application/json,.json" onChange={session.importSave} /></label>
-          <button type="button" onClick={session.confirmReset}>Borrar partida</button>
+          <label className="file-button" data-tour="import-save">Importar partida<input type="file" accept="application/json,.json" onChange={session.importSave} /></label>
+          <button data-tour="delete-save" type="button" onClick={session.confirmReset}>Borrar partida</button>
         </div>
       </footer>
 
@@ -261,7 +401,7 @@ export default function App() {
             <p className="eyebrow">CONFIRMACIÓN DE PRESTIGIO</p>
             <h2 id="prestige-confirm-title">¿Transformar esta run en Resonancia?</h2>
             <p>Recibirás <strong>{formatGameNumber(getPrestigePreview(game).reward)} puntos de Resonancia</strong>.</p>
-            <p>Se reinician Charge, Echo y mejoras de run. Se conservan Conduit, puntos acumulados, ingresos de por vida y tiempo total.</p>
+            <p>Se reinician Charge, Echo y mejoras de run. Se conservan Conduit, puntos acumulados, crónica, ingresos de por vida y tiempo total.</p>
             <div className="action-row">
               <button className="action-button" type="button" onClick={() => {
                 session.runAction(performPrestige);
@@ -384,10 +524,12 @@ function UpgradeRow({
   game,
   id,
   onBuy,
+  onSetAutomation,
 }: {
   readonly game: GameState;
   readonly id: UpgradeId;
   readonly onBuy: (quantity: number | "max") => void;
+  readonly onSetAutomation: (enabled: boolean) => void;
 }) {
   const definition = GAME_CONFIG.upgrades[id];
   const level = game.upgrades[id];
@@ -411,7 +553,7 @@ function UpgradeRow({
         : undefined;
 
   return (
-    <article className={`upgrade-row ${!unlock.unlocked ? "upgrade-locked" : ""}`}>
+    <article className={`upgrade-row ${!unlock.unlocked ? "upgrade-locked" : ""}`} data-tour={`upgrade-${id}`}>
       <div className="upgrade-index" aria-hidden="true">{String(UPGRADE_ORDER.indexOf(id) + 1).padStart(2, "0")}</div>
       <div className="upgrade-copy">
         <div className="upgrade-title-line"><h3>{UPGRADE_COPY[id].title}</h3><span>NIVEL {level}{Number.isFinite(definition.maxLevel) ? ` / ${definition.maxLevel}` : ""}</span></div>
@@ -422,6 +564,17 @@ function UpgradeRow({
       <div className="upgrade-actions">
         <button type="button" disabled={!quote.allowed} title={disabledReason} aria-describedby={disabledReason ? `${id}-purchase-reason` : undefined} onClick={() => onBuy(1)}>Comprar 1</button>
         <button type="button" disabled={quantity === 0} title={disabledReason} aria-describedby={disabledReason ? `${id}-purchase-reason` : undefined} onClick={() => onBuy("max")}>Máx. {quantity > 0 ? `(${quantity})` : ""}</button>
+        {id === "seed-autobuyer" && level > 0 && (
+          <button
+            className="automation-toggle"
+            type="button"
+            data-tour="autopilot-toggle"
+            aria-pressed={game.automationEnabled["seed-array-auto"]}
+            onClick={() => onSetAutomation(!game.automationEnabled["seed-array-auto"])}
+          >
+            {game.automationEnabled["seed-array-auto"] ? "Pausar autopiloto" : "Activar autopiloto"}
+          </button>
+        )}
         {unlock.unlocked && disabledReason && <small id={`${id}-purchase-reason`} className="purchase-reason">{disabledReason}</small>}
       </div>
     </article>

@@ -9,5 +9,6 @@ export * from "./purchases.js";
 export * from "./save.js";
 export * from "./simulation.js";
 export * from "./simulation-harness.js";
+export * from "./specialization.js";
 export * from "./state.js";
 export * from "./unlocks.js";

@@ -9,6 +9,8 @@ export type UpgradeId =
   | "harmonic-drive"
   | "seed-autobuyer";
 export type AutomationId = "seed-array-auto";
+export const SPECIALIZATION_PATHS = ["charge", "echo"] as const;
+export type SpecializationPath = (typeof SPECIALIZATION_PATHS)[number];
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -177,6 +179,13 @@ export const GAME_CONFIG = {
     permanentUpgradeBaseCost: 1,
     permanentUpgradeMaxLevel: 25,
   },
+  specialization: {
+    maxLevel: 3,
+    baseCost: 1,
+    costIncrement: 1,
+    chargeMultiplierPerLevel: gameNumber("1.15"),
+    echoMultiplierPerLevel: gameNumber("1.25"),
+  },
   simulation: {
     maxAdvanceSeconds: 31_536_000,
     maxOfflineSeconds: 604_800,
@@ -223,6 +232,12 @@ export const ACHIEVEMENTS = [
     title: "Conducto permanente",
     entry: "Conduit conserva una parte de la señal entre frecuencias.",
     condition: (state) => state.permanentLevels.conduit >= 1,
+  },
+  {
+    id: "specialization-chosen",
+    title: "Una nueva trayectoria",
+    entry: "Una ruta permanente transforma la señal del observatorio.",
+    condition: (state) => state.specialization.level >= 1,
   },
   {
     id: "deep-resonance-recorded",

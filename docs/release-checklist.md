@@ -11,8 +11,9 @@
   are recorded in [phase-4-balance-report.md](./phase-4-balance-report.md).
 - [x] Seven-day offline and automation timing and payload size measured in
   [phase-4-performance-report.md](./phase-4-performance-report.md).
-- [x] Existing v1 game payload migration tested; malformed and unknown
-  achievement IDs are rejected without a success-shaped fallback.
+- [x] Existing v1/v2 game payload migration tested; malformed and unknown
+  achievement IDs and specialization states are rejected without a
+  success-shaped fallback.
 - [x] `.gitignore` rules checked by the Git specialist; no files were staged or
   committed.
 

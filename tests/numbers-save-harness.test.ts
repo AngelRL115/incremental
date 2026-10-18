@@ -34,11 +34,15 @@ describe("large number and save safety", () => {
     const advanced = {
       ...createNewGameState(),
       resources: { charge: gameNumber("1e80"), echo: gameNumber("2.5e40") },
+      prestigeCount: 1,
+      specialization: { path: "echo" as const, level: 2 },
+      achievements: ["first-resonance", "specialization-chosen"],
     };
     const restored = deserializeGameState(serializeGameState(advanced));
     expect(restored.resources.charge.equals("1e80")).toBe(true);
     expect(restored.resources.echo.equals("2.5e40")).toBe(true);
     expect(restored.upgrades["seed-array"]).toBe(1);
+    expect(restored.specialization).toEqual({ path: "echo", level: 2 });
     expect(restored.achievements).toEqual(advanced.achievements);
   });
 
@@ -57,7 +61,21 @@ describe("large number and save safety", () => {
     expect(restored.resources.charge.toNumber()).toBe(275);
     expect(restored.runChargeEarned.toNumber()).toBe(250);
     expect(restored.achievements).toContain("echo-observed");
-    expect(JSON.parse(serializeGameState(restored)).version).toBe(2);
+    expect(JSON.parse(serializeGameState(restored)).version).toBe(3);
+  });
+
+  it("migrates v2 saves with no specialization while preserving achievements", () => {
+    const current = JSON.parse(serializeGameState({
+      ...createNewGameState(),
+      achievements: ["echo-observed"],
+    })) as Record<string, unknown>;
+    current.version = 2;
+    delete current.specialization;
+
+    const restored = deserializeGameState(JSON.stringify(current));
+    expect(restored.specialization).toEqual({ path: null, level: 0 });
+    expect(restored.achievements).toContain("echo-observed");
+    expect(JSON.parse(serializeGameState(restored)).version).toBe(3);
   });
 
   it("rejects unknown and duplicate achievement IDs in v2 saves", () => {
@@ -88,6 +106,16 @@ describe("large number and save safety", () => {
     };
     parsed.resources.charge = "NaN";
     expect(() => deserializeGameState(JSON.stringify(parsed))).toThrow(GameNumberError);
+  });
+
+  it("rejects inconsistent specialization data", () => {
+    const invalid = JSON.parse(serializeGameState(createNewGameState())) as {
+      specialization: { path: string | null; level: number };
+    };
+    invalid.specialization = { path: null, level: 1 };
+    expect(() => deserializeGameState(JSON.stringify(invalid))).toThrow(
+      /Invalid specialization level/,
+    );
   });
 });
 

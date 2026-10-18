@@ -1,6 +1,15 @@
 import { Decimal, gameNumber, type GameNumber } from "./decimal.js";
-import type { AutomationId, ResourceId, UpgradeId } from "./config.js";
-import { ACHIEVEMENT_IDS, GAME_CONFIG } from "./config.js";
+import type {
+  AutomationId,
+  ResourceId,
+  SpecializationPath,
+  UpgradeId,
+} from "./config.js";
+import {
+  ACHIEVEMENT_IDS,
+  GAME_CONFIG,
+  SPECIALIZATION_PATHS,
+} from "./config.js";
 
 export interface GameState {
   resources: Record<ResourceId, GameNumber>;
@@ -17,6 +26,10 @@ export interface GameState {
   lifetimePrestigePoints: GameNumber;
   permanentLevels: {
     conduit: number;
+  };
+  specialization: {
+    path: SpecializationPath | null;
+    level: number;
   };
   prestigeCount: number;
 }
@@ -47,6 +60,7 @@ export function createNewGameState(): GameState {
     availablePrestigePoints: new Decimal(0),
     lifetimePrestigePoints: new Decimal(0),
     permanentLevels: { conduit: 0 },
+    specialization: { path: null, level: 0 },
     prestigeCount: 0,
   };
 }
@@ -59,6 +73,7 @@ export function cloneGameState(state: GameState): GameState {
     achievements: [...state.achievements],
     automationEnabled: { ...state.automationEnabled },
     permanentLevels: { ...state.permanentLevels },
+    specialization: { ...state.specialization },
   };
 }
 
@@ -115,6 +130,26 @@ export function assertGameState(state: GameState): void {
   }
   if (!Number.isSafeInteger(state.prestigeCount) || state.prestigeCount < 0) {
     throw new Error("Invalid prestige count");
+  }
+  if (
+    typeof state.specialization !== "object" ||
+    state.specialization === null ||
+    Array.isArray(state.specialization)
+  ) {
+    throw new Error("Invalid specialization state");
+  }
+  const { path, level } = state.specialization;
+  if (path !== null && !SPECIALIZATION_PATHS.includes(path)) {
+    throw new Error("Invalid specialization path");
+  }
+  if (
+    !Number.isSafeInteger(level) ||
+    level < 0 ||
+    level > GAME_CONFIG.specialization.maxLevel ||
+    (path === null) !== (level === 0) ||
+    (level > 0 && state.prestigeCount === 0)
+  ) {
+    throw new Error("Invalid specialization level");
   }
   if (
     state.lifetimeChargeEarned.lessThan(state.runChargeEarned) ||

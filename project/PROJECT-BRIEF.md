@@ -9,7 +9,9 @@ Fuente: `idea_descripcion.md` y prompts humanos Phase 1–3. No hay un Master Pr
 
 ## Alcance
 - P0: interfaz responsive funcional sobre el motor TypeScript existente; recursos, Canvas 2D, upgrades, desbloqueos, save/load, offline, prestigio y continuación.
-- P1: playtest/balance y refinamiento de tutorial, recuperación e interacción.
+- P1: guía interactiva Driver.js para explicar el loop antes de cualquier
+  validación externa; después, playtest/balance y refinamiento de onboarding,
+  recuperación e interacción basado en evidencia.
 - Non-goals: backend/cuentas/cloud, pagos/ads, analítica, multi-prestige, eventos temporales, copia de ISEPS.
 
 ## Stack y estado
@@ -44,7 +46,10 @@ Fuente: `idea_descripcion.md` y prompts humanos Phase 1–3. No hay un Master Pr
   validación final verde (build, 34 unit tests, balance, 10 E2E Chromium).
   VoiceOver/NVDA no se recorrió y, por decisión humana D12, no fue gate de
   cierre; consultar `project/STATE.md` y `project/DEFINITION-OF-DONE.md`.
-- G2 propuesto: `goals/G2.md`; no iniciar hasta cerrar G1 y acordar criterios
-  de playtest con `product-owner`.
+- G2-0 y G2-1 completos (targets aprobados, protocolo y fixture ensayados):
+  `goals/G2.md`. Guía interactiva implementada con E2E; está pendiente la
+  validación de comprensión del Product Owner. No preparar invitaciones,
+  contactar participantes, ejecutar sesiones ni retunear economía sin
+  autorización explícita posterior.
 - G3 condicionado y no autorizado: `goals/G3-preview.md`; no publicar ni
   configurar hosting sin decisión humana.

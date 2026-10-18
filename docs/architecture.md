@@ -28,6 +28,7 @@ src/
     unlocks.ts          # hitos, prerequisitos y registros
     automation.ts       # eventos de auto-compra
     prestige.ts         # preview, reset y mejora permanente
+    specialization.ts   # cotizaciones y compras de trayectoria permanente
     offline.ts          # límites temporales y progreso ausente
     save.ts             # payload decimal validado y migración
     decimal.ts          # aritmética decimal y límites numéricos
@@ -59,15 +60,16 @@ El motor usa `decimal.js` con 40 dígitos significativos, strings decimales al g
 La simulación debe aceptar `deltaSeconds` y ser independiente de FPS. El render puede ejecutarse a 30–60 FPS, mientras que el motor avanza con un delta limitado y controlado. Para pausas largas, el sistema offline usa el tiempo transcurrido validado y una fórmula de producción, no un catch-up infinito.
 
 ## Persistencia
-- Envelope browser v1 y payload económico v2, versionados por separado.
+- Envelope browser v1 y payload económico v3, versionados por separado.
 - Escritura mediante un snapshot validado.
-- La migración del payload v1 inicializa los registros nuevos y preserva el progreso legado.
+- La migración de payloads v1/v2 inicializa especialización vacía y preserva el progreso legado.
 - Si el guardado es inválido, no sobrescribirlo silenciosamente.
 - Exportar/importar como JSON validado.
 - Confirmación explícita para borrar partida.
 
 `src/app/local-save.ts` versiona aparte el envelope browser (sigue en v1);
-`src/game/save.ts` versiona el contenido económico (v2) y migra payloads v1
-agregando los registros derivados que correspondan. Los registros de crónica no
-otorgan recursos ni multiplicadores. `src/renderer/ParticleField.tsx` solo lee
-las señales visuales y no altera el estado económico.
+`src/game/save.ts` versiona el contenido económico (v3), acepta payloads v1/v2
+y les asigna especialización vacía. El prestigio conserva la ruta/rango; la
+elección consume los mismos RP que Conduit. Los registros de crónica no otorgan
+recursos ni multiplicadores. `src/renderer/ParticleField.tsx` solo lee las
+señales visuales y no altera el estado económico.

@@ -1,7 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 
 const SAVE_KEY = "space-idle.save";
+const prestigeSandboxSave = readFileSync(
+  new URL("../fixtures/g2-prestige-sandbox.json", import.meta.url),
+  "utf8",
+);
+const specializationSandboxSave = readFileSync(
+  new URL("../fixtures/g2-specialization-sandbox.json", import.meta.url),
+  "utf8",
+);
 const browserErrors = new WeakMap<Page, string[]>();
 
 function collectBrowserErrors(page: Page): void {
@@ -100,6 +109,73 @@ test("earns resources, purchases a real upgrade, and reloads the saved level", a
   }).getByText("NIVEL 2 / 100000")).toBeVisible();
 });
 
+test("guides the player through the complete game loop without activating controls", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Guía del juego" }).click();
+
+  const titles = [
+    "Cómo funciona Space Idle",
+    "1. El campo de partículas",
+    "2. Charge: saldo y velocidad",
+    "3. Echo",
+    "4. Resonancia y reinicios",
+    "5. Pulso manual",
+    "6. Umbrales de esta partida",
+    "7. Cómo leer y comprar mejoras",
+    "8. Seed Array",
+    "9. Resonance Lens",
+    "10. Echo Loom",
+    "11. Harmonic Drive",
+    "12. Seed Array Autopilot",
+    "13. Crónica de frecuencia",
+    "14. Prestigio: empezar otra frecuencia",
+    "15. Especialización permanente",
+    "16. Guardado y progreso offline",
+    "17. Exportar una copia",
+    "18. Importar una partida",
+    "19. Borrar la partida",
+    "20. Reducir efectos",
+    "El ciclo del juego",
+  ];
+  const popover = page.locator(".driver-popover");
+  await expect.poll(() => popover.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
+  const guideA11y = await new AxeBuilder({ page }).analyze();
+  expect(guideA11y.violations).toEqual([]);
+  for (const [index, title] of titles.entries()) {
+    await expect(popover.locator(".driver-popover-title")).toHaveText(title);
+    if (title === "15. Especialización permanente") {
+      await expect(popover.locator(".driver-popover-description"))
+        .toContainText("fija la ruta para siempre");
+      await expect(popover.locator(".driver-popover-description")).toContainText("×1.15");
+      await expect(popover.locator(".driver-popover-description")).toContainText("Conduit");
+    }
+    await page.getByRole("button", {
+      name: index === titles.length - 1 ? "Terminar" : "Siguiente",
+    }).click();
+  }
+  await expect(popover).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "La materia encuentra su ritmo." })).toBeVisible();
+});
+
+test("keeps the game guide inside a narrow mobile viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Guía del juego" }).click();
+  await expect(page.locator(".driver-popover-title")).toHaveText("Cómo funciona Space Idle");
+
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await expect(page.locator(".driver-popover-title")).toHaveText("1. El campo de partículas");
+  const bounds = await page.locator(".driver-popover").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, width: rect.width };
+  });
+  expect(bounds.left).toBeGreaterThanOrEqual(0);
+  expect(bounds.right).toBeLessThanOrEqual(320);
+  expect(bounds.width).toBeGreaterThan(250);
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".driver-popover")).toHaveCount(0);
+});
+
 test("rapid repeated purchase events never spend the same balance twice", async ({ page }) => {
   await page.clock.pauseAt(new Date(1_800_000_000_000));
   await page.goto("/");
@@ -154,7 +230,7 @@ test("credits capped offline production once and persists the updated timestamp"
   }, SAVE_KEY);
   expect(balance.savedAt).toBeGreaterThan(Date.now() - 10_000);
   expect(balance.charge).toBeGreaterThanOrEqual(265);
-  expect(balance.version).toBe(2);
+  expect(balance.version).toBe(3);
 
   await page.reload();
   await expect(page.getByRole("dialog", { name: "El sistema siguió evolucionando." })).toHaveCount(0);
@@ -185,16 +261,47 @@ test("unlocks Echo Loom at the production milestone and purchases the second res
   await expect(page.getByText("0.80 / s")).toBeVisible();
 });
 
-test("previews prestige, confirms its reset, and keeps permanent progression", async ({ page }) => {
-  const state = JSON.parse(serializedState({
-    resources: { charge: "3000", echo: "12" },
-    runChargeEarned: "3000",
-    lifetimeChargeEarned: "3000",
-    runEchoEarned: "12",
-    lifetimeEchoEarned: "12",
-  })) as Record<string, unknown>;
-  await preloadSave(page, JSON.stringify(state));
+test("allows the player to pause and reactivate the purchased Seed Array Autopilot", async ({ page }) => {
+  const savedAt = Date.now();
+  await preloadSave(page, serializedState({
+    resources: { charge: "25", echo: "100" },
+    upgrades: {
+      "seed-array": 1,
+      "resonance-lens": 0,
+      "echo-loom": 1,
+      "harmonic-drive": 0,
+      "seed-autobuyer": 0,
+    },
+    runChargeEarned: "1000",
+    lifetimeChargeEarned: "1000",
+    runEchoEarned: "20",
+    lifetimeEchoEarned: "20",
+  }), savedAt);
   await page.goto("/");
+
+  const autopilot = page.locator(".upgrade-row").filter({
+    has: page.getByRole("heading", { name: "Seed Array Autopilot", exact: true }),
+  });
+  await autopilot.getByRole("button", { name: "Comprar 1" }).click();
+  const toggle = autopilot.getByRole("button", { name: "Pausar autopiloto" });
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await toggle.click();
+  await expect(autopilot.getByRole("button", { name: "Activar autopiloto" }))
+    .toHaveAttribute("aria-pressed", "false");
+});
+
+test("previews prestige, confirms its reset, and keeps permanent progression", async ({ page }) => {
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.goto("/");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "g2-prestige-sandbox.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(prestigeSandboxSave),
+  });
+  await expect(page.getByRole("alert")).toContainText("Partida importada correctamente");
+  await expect(page.getByRole("alert")).toContainText(
+    "El progreso offline del archivo no se acredita al importar",
+  );
 
   await page.getByRole("button", { name: /Revisar prestigio/ }).click();
   const dialog = page.getByRole("dialog", { name: "¿Transformar esta run en Resonancia?" });
@@ -217,6 +324,50 @@ test("previews prestige, confirms its reset, and keeps permanent progression", a
   await page.getByRole("button", { name: "Comprar Conduit" }).click();
   await expect(page.locator(".rate-line strong")).toHaveText("5.00 Charge/s");
   await expect(page.getByRole("button", { name: "Comprar Conduit" })).toHaveCount(0);
+});
+
+test("chooses one permanent specialization route and saves each purchased rank", async ({ page }) => {
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.goto("/");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "g2-specialization-sandbox.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(specializationSandboxSave),
+  });
+  await expect(page.getByRole("alert")).toContainText("Partida importada correctamente");
+
+  const panel = page.getByRole("region", { name: "Especialización" });
+  await expect(panel).toContainText("Resonancia disponible: 3.00 RP");
+  await expect(panel).toContainText("Próximo rango 1: 1.00 RP");
+  await page.setViewportSize({ width: 320, height: 844 });
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
+  const specializationAudit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(specializationAudit.violations).toEqual([]);
+  const firstRank = panel.getByRole("button", { name: /Elegir Vector de Charge/ });
+  const target = await firstRank.boundingBox();
+  expect(target?.height).toBeGreaterThanOrEqual(44);
+  await firstRank.focus();
+  await page.keyboard.press("Enter");
+  await expect(panel).toContainText("Resonancia disponible: 2.00 RP");
+  await expect(panel).toContainText("Elegida · rango 1 de 3");
+  await expect(panel.getByRole("button", { name: /Elegir Resonancia Echo/ })).toBeDisabled();
+
+  await panel.getByRole("button", { name: /Mejorar Vector de Charge/ }).click();
+  await expect(panel).toContainText("Resonancia disponible: 0.00 RP");
+  await expect(panel).toContainText("Elegida · rango 2 de 3");
+  await expect(panel.getByRole("button", { name: /Mejorar Vector de Charge/ })).toBeDisabled();
+  await page.reload();
+
+  const restored = page.getByRole("region", { name: "Especialización" });
+  await expect(restored).toContainText("Resonancia disponible: 0.00 RP");
+  await expect(restored).toContainText("Elegida · rango 2 de 3");
+  await expect(restored.getByRole("button", { name: /Elegir Resonancia Echo/ })).toBeDisabled();
 });
 
 test("offers explicit recovery for an invalid save and fits a mobile viewport", async ({ page }) => {

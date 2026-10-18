@@ -15,14 +15,16 @@ QA recibido y validación completa verde el 2026-10-14.
 Ver `goals/G1.md`, `project/DEFINITION-OF-DONE.md` y
 `docs/g1-qa-signoff.md`.
 
-## G2 — Validar y calibrar el loop jugable (propuesto)
+## G2 — Validar y calibrar el loop jugable (validación previa de guía pendiente)
 
 Usar playtests formativos sin tracking para medir comprensión, onboarding,
 fricción y ritmo; cambiar contenido/UI o economía solo cuando exista evidencia.
 
-Gate de entrada: G1 cerrado o waiver explícito del Product Owner; la pregunta
-de investigación, bandas de éxito, consentimiento y procedimiento deben estar
-aprobados antes de reclutar.
+G2-0 y G2-1 están completos: objetivos y protocolo aprobados, fixture ensayado.
+La guía interactiva previa a participantes está implementada; falta que el
+Product Owner la pruebe y confirme su claridad. No preparar invitaciones,
+contactar participantes ni calendarizar sesiones hasta resolver dudas y obtener
+autorización explícita.
 
 Ver `goals/G2.md`. No iniciar aún.
 

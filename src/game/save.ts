@@ -4,8 +4,8 @@ import { ACHIEVEMENT_IDS, GAME_CONFIG, UPGRADE_IDS } from "./config.js";
 import { assertGameState, type GameState } from "./state.js";
 import { refreshAchievements } from "./unlocks.js";
 
-const SAVE_VERSION = 2;
-const PREVIOUS_SAVE_VERSION = 1;
+const SAVE_VERSION = 3;
+const PREVIOUS_SAVE_VERSIONS = [1, 2] as const;
 
 export class GameSaveError extends Error {
   constructor(message: string) {
@@ -29,6 +29,7 @@ interface SerializedGameState {
   availablePrestigePoints: string;
   lifetimePrestigePoints: string;
   permanentLevels: { conduit: number };
+  specialization: { path: "charge" | "echo" | null; level: number };
   prestigeCount: number;
 }
 
@@ -56,6 +57,7 @@ export function serializeGameState(state: GameState): string {
     availablePrestigePoints: serializeNumber(state.availablePrestigePoints),
     lifetimePrestigePoints: serializeNumber(state.lifetimePrestigePoints),
     permanentLevels: { ...state.permanentLevels },
+    specialization: { ...state.specialization },
     prestigeCount: state.prestigeCount,
   };
   return JSON.stringify(serialized);
@@ -91,16 +93,22 @@ export function deserializeGameState(serialized: string): GameState {
     throw new GameSaveError(`Save is not valid JSON: ${String(error)}`);
   }
   const root = object(parsed, "Save");
-  if (root.version !== SAVE_VERSION && root.version !== PREVIOUS_SAVE_VERSION) {
+  if (
+    root.version !== SAVE_VERSION &&
+    !PREVIOUS_SAVE_VERSIONS.includes(root.version as 1 | 2)
+  ) {
     throw new GameSaveError(`Unsupported save version: ${String(root.version)}`);
   }
   const resources = object(root.resources, "resources");
   const upgrades = object(root.upgrades, "upgrades");
   const automation = object(root.automationEnabled, "automationEnabled");
   const permanent = object(root.permanentLevels, "permanentLevels");
-  const achievements: string[] = root.version === PREVIOUS_SAVE_VERSION
+  const achievements: string[] = root.version === 1
     ? []
     : parseAchievementIds(root.achievements);
+  const specialization = root.version === SAVE_VERSION
+    ? parseSpecialization(root.specialization)
+    : { path: null, level: 0 } as const;
 
   const automationEnabled: Record<AutomationId, boolean> = {
     "seed-array-auto": automation["seed-array-auto"] as boolean,
@@ -151,6 +159,7 @@ export function deserializeGameState(serialized: string): GameState {
       "lifetimePrestigePoints",
     ),
     permanentLevels: { conduit: permanent.conduit as number },
+    specialization,
     prestigeCount: root.prestigeCount as number,
   };
   try {
@@ -159,6 +168,23 @@ export function deserializeGameState(serialized: string): GameState {
     throw new GameSaveError(`Save contains invalid game state: ${String(error)}`);
   }
   return refreshAchievements(state);
+}
+
+function parseSpecialization(
+  value: unknown,
+): { path: "charge" | "echo" | null; level: number } {
+  const source = object(value, "specialization");
+  const path = source.path;
+  const level = source.level;
+  if (
+    (path !== null && path !== "charge" && path !== "echo") ||
+    !Number.isSafeInteger(level) ||
+    (level as number) < 0 ||
+    (level as number) > GAME_CONFIG.specialization.maxLevel
+  ) {
+    throw new GameSaveError("specialization is invalid");
+  }
+  return { path, level: level as number };
 }
 
 function parseAchievementIds(value: unknown): string[] {

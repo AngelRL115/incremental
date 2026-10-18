@@ -4,8 +4,9 @@
   prestige much faster than idle progression in the current simulator; see the
   measured scenarios and recommendation in
   [phase-4-balance-report.md](./phase-4-balance-report.md).
-- Phase 4 adds six informational chronicle entries and configurable unlock
-  prerequisites only. There is no branching skill tree, second prestige layer,
+- The G2 specialization is deliberately small: two mutually exclusive paths
+  with three ranks each. It is not a broad branching tree or a second prestige
+  layer; its pacing and comprehension still need player validation. There is no
   additional automation, achievements with rewards, or resource conversion.
 - Save data is local to one browser profile/device. There is no account,
   cloud synchronization, or server-side recovery. The multi-tab lease protects

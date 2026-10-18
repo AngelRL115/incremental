@@ -9,7 +9,7 @@ export interface PrestigePreview {
   readonly reason?: string;
   readonly resetResources: readonly ("charge" | "echo")[];
   readonly preservedResources: readonly ("availablePrestigePoints" | "lifetimePrestigePoints")[];
-  readonly preservedPermanentLevels: readonly ["conduit"];
+  readonly preservedPermanentLevels: readonly ["conduit", "specialization"];
 }
 
 export class PrestigeError extends Error {
@@ -38,7 +38,7 @@ export function getPrestigePreview(state: GameState): PrestigePreview {
       : {}),
     resetResources: ["charge", "echo"],
     preservedResources: ["availablePrestigePoints", "lifetimePrestigePoints"],
-    preservedPermanentLevels: ["conduit"],
+    preservedPermanentLevels: ["conduit", "specialization"],
   };
 }
 
@@ -62,6 +62,7 @@ export function performPrestige(state: GameState): GameState {
     "Lifetime prestige points",
   );
   next.permanentLevels = { ...state.permanentLevels };
+  next.specialization = { ...state.specialization };
   next.prestigeCount = state.prestigeCount + 1;
   next.achievements = [...state.achievements];
   return refreshAchievements(next);

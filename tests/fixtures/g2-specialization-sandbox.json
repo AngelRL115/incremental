@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "savedAt": 0,
+  "game": "{\"version\":3,\"resources\":{\"charge\":\"25\",\"echo\":\"0\"},\"upgrades\":{\"seed-array\":1,\"resonance-lens\":0,\"echo-loom\":0,\"harmonic-drive\":0,\"seed-autobuyer\":0},\"achievements\":[],\"automationEnabled\":{\"seed-array-auto\":false},\"runChargeEarned\":\"0\",\"lifetimeChargeEarned\":\"0\",\"runEchoEarned\":\"0\",\"lifetimeEchoEarned\":\"0\",\"runElapsedSeconds\":\"0\",\"totalElapsedSeconds\":\"0\",\"availablePrestigePoints\":\"3\",\"lifetimePrestigePoints\":\"3\",\"permanentLevels\":{\"conduit\":0},\"specialization\":{\"path\":null,\"level\":0},\"prestigeCount\":1}"
+}

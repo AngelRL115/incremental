@@ -111,6 +111,13 @@ export function getProductionMultiplier(state: GameState): Decimal {
       multiplier = multiplier.mul(milestone.productionMultiplier);
     }
   }
+  if (state.specialization.path === "charge" && state.specialization.level > 0) {
+    multiplier = multiplier.mul(
+      GAME_CONFIG.specialization.chargeMultiplierPerLevel.pow(
+        state.specialization.level,
+      ),
+    );
+  }
   return assertFinite(multiplier, "Production multiplier");
 }
 
@@ -119,7 +126,14 @@ export function getProductionRates(state: GameState): ProductionRates {
     GAME_CONFIG.seedChargePerLevelPerSecond.mul(state.upgrades["seed-array"]),
     "Seed Array production",
   ).mul(getProductionMultiplier(state));
-  const echoRate = GAME_CONFIG.echoPerLoomLevelPerSecond.mul(state.upgrades["echo-loom"]);
+  let echoRate = GAME_CONFIG.echoPerLoomLevelPerSecond.mul(state.upgrades["echo-loom"]);
+  if (state.specialization.path === "echo" && state.specialization.level > 0) {
+    echoRate = echoRate.mul(
+      GAME_CONFIG.specialization.echoMultiplierPerLevel.pow(
+        state.specialization.level,
+      ),
+    );
+  }
   return {
     charge: assertFinite(chargeRate, "Charge production rate"),
     echo: assertFinite(echoRate, "Echo production rate"),
@@ -200,9 +214,12 @@ export function getMarginalProduction(
 ): MarginalProduction {
   integer(quantity, "quantity", 1);
   if (upgradeId === "echo-loom") {
+    const multiplier = state.specialization.path === "echo"
+      ? GAME_CONFIG.specialization.echoMultiplierPerLevel.pow(state.specialization.level)
+      : new Decimal(1);
     return {
       resource: "echo",
-      perSecond: GAME_CONFIG.echoPerLoomLevelPerSecond.mul(quantity),
+      perSecond: GAME_CONFIG.echoPerLoomLevelPerSecond.mul(quantity).mul(multiplier),
     };
   }
   return {

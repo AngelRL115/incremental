@@ -12,6 +12,7 @@
 4. Echo se genera con Echo Looms; puede gastarse en mejoras de producción y en el autopiloto.
 5. La producción atraviesa multiplicadores de hitos durante una run.
 6. Al generar 2,500 Charge en la run se puede hacer prestigio, cobrar Puntos de Resonancia y reiniciar el estado de run.
+7. Después del primer prestigio se puede fijar una especialización original de tres rangos: Charge o Echo.
 
 ## Recursos y unidades
 
@@ -19,7 +20,7 @@
 |---|---:|---|---|
 | Charge | 25 | Seed Arrays a ritmo pasivo; pulso manual | Comprar productores y mejoras; umbrales de hitos y prestigio |
 | Echo | 0 | Echo Loom a ritmo pasivo tras desbloquearlo | Comprar Harmonic Drive y Seed Array Autopilot |
-| Puntos de Resonancia | 0 | Recompensa de prestigio | Comprar niveles permanentes de Conduit |
+| Puntos de Resonancia | 0 | Recompensa de prestigio | Comprar Conduit o una especialización permanente; comparten saldo |
 
 Los contadores `runChargeEarned`, `lifetimeChargeEarned` y sus equivalentes Echo son ingresos acumulados, distintos del saldo actual (que puede gastarse).
 
@@ -71,12 +72,19 @@ M_charge =
     1.25 ^ permanentConduitLevel
   × 1.3 ^ resonanceLensLevel
   × 1.25 ^ harmonicDriveLevel
+  × 1.15 ^ chargeSpecializationLevel
   × product(reached milestone multipliers)
 
 Charge/s = Charge base/s × M_charge
 ```
 
-Echo/s no recibe esos multiplicadores en esta versión. Ingreso automático y manual incrementan el saldo y los contadores de ingreso en la misma transacción.
+Echo/s = Echo base/s × 1.25 ^ echoSpecializationLevel.
+
+Solo una ruta de especialización puede tener rango. La elegibilidad empieza
+después del primer prestigio; cada rango cuesta 1, 2 y 3 RP, respectivamente.
+La primera compra fija la ruta sin respec, y el efecto permanece tras cada
+prestigio. Ingreso automático y manual incrementan el saldo y los contadores de
+ingreso en la misma transacción.
 
 ## Hitos de run
 
@@ -116,9 +124,10 @@ El resultado indica unidades/s del recurso producido por unidad de la moneda de 
 - **Elegibilidad:** `runChargeEarned >= 2,500`.
 - **Premio:** `floor(runChargeEarned / 2,500)` Puntos de Resonancia.
 - **Se reinicia:** saldos Charge/Echo, mejoras de run, automatización y tiempo de la run.
-- **Se conserva:** niveles permanentes Conduit, puntos disponibles, puntos acumulados de por vida, ingresos de por vida, tiempo total, contador de prestigios y crónica.
+- **Se conserva:** niveles permanentes Conduit y especialización, puntos disponibles, puntos acumulados de por vida, ingresos de por vida, tiempo total, contador de prestigios y crónica.
 - **Estado nuevo:** 25 Charge, Seed Array nivel 1, los demás recursos/mejoras de run en cero.
 - **Mejora permanente:** Conduit aumenta toda producción Charge por ×1.25 por nivel; el nivel siguiente cuesta `1 + nivel actual` Puntos de Resonancia; máximo 25.
+- **Especialización permanente:** elegir Vector de Charge (Charge ×1.15/rango) o Resonancia Echo (Echo ×1.25/rango), máximo 3 rangos con coste 1/2/3 RP. Es una elección excluyente e irreversible; son valores originales aprobados por D20, no datos de ISEPS.
 - **Confirmación:** el motor ofrece un preview con elegibilidad, premio, recursos reiniciados y metadatos preservados; la UI de Phase 3 confirma antes del reset.
 - **Idempotencia del flujo:** tras prestigiar, `runChargeEarned` se reinicia a cero, por lo que volver a invocar con el estado nuevo no puede acuñar el premio otra vez.
 
@@ -135,11 +144,11 @@ Estos son criterios de diseño y no un ajuste estadístico: no existen muestras 
 
 ## Precisión, validación y límites
 
-El envelope de `localStorage` conserva schema v1. El payload económico subió
-de v1 a v2 para guardar los IDs de crónica; al cargar v1, el motor inicializa
-esa lista y deriva las entradas ya logradas a partir del estado conservado.
-Los IDs desconocidos o duplicados en payload v2 se rechazan, sin sobrescribir
-el archivo original.
+El envelope de `localStorage` conserva schema v1. El payload económico v3
+guarda la especialización además de la crónica; los payloads v1/v2 inicializan
+la ruta como vacía y preservan el progreso previo. Los IDs desconocidos o
+duplicados y las estructuras de especialización inválidas se rechazan, sin
+sobrescribir el archivo original.
 
 - Aritmética con `decimal.js`, 40 dígitos significativos, serialización decimal como string y exponentes soportados entre `1e-1,000,000,000,000` y `1e1,000,000,000,000`.
 - Overflow/non-finite se rechaza con error; balances negativos y estados inválidos también.

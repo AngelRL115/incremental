@@ -51,6 +51,23 @@ describe("first prestige transaction", () => {
     expect(() => performPrestige(reset)).toThrow(PrestigeError);
   });
 
+  it("preserves specialization after another prestige without charging it again", () => {
+    const state = {
+      ...eligibleState(),
+      prestigeCount: 1,
+      availablePrestigePoints: new Decimal(2),
+      lifetimePrestigePoints: new Decimal(2),
+      specialization: { path: "charge" as const, level: 2 },
+    };
+    const preview = getPrestigePreview(state);
+    const reset = performPrestige(state);
+
+    expect(preview.preservedPermanentLevels).toEqual(["conduit", "specialization"]);
+    expect(reset.specialization).toEqual({ path: "charge", level: 2 });
+    expect(reset.availablePrestigePoints.toNumber()).toBe(3);
+    expect(reset.achievements).toContain("specialization-chosen");
+  });
+
   it("spends prestige points on a permanent production multiplier", () => {
     const reset = performPrestige(eligibleState());
     const upgraded = buyPermanentConduit(reset);

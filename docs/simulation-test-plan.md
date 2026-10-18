@@ -31,9 +31,10 @@ Pruebas de dominio TypeScript sin UI, DOM, Canvas o servidor. El motor recibe el
 | Tiempo | Cero, intervalos partidos, cruce de hito, negativo, NaN, Infinity, límite anual | `tests/simulation.test.ts` |
 | Automatización | Compra inmediata, eventos de compra, resultado vs avances de un segundo | `tests/simulation.test.ts` |
 | Offline | Consistencia online/offline, cap, reloj futuro/negativo y hueco implausible | `tests/simulation.test.ts` |
-| Prestigio | Antes del umbral, umbral/recompensa, conservación, estado fresco, repetición | `tests/prestige.test.ts` |
+| Prestigio | Antes del umbral, umbral/recompensa, conservación de Conduit/especialización, estado fresco, repetición | `tests/prestige.test.ts` |
+| Especialización | Desbloqueo, coste 1/2/3, ruta permanente, efecto por recurso, RP compartidos con Conduit, rechazo atómico | `tests/specialization.test.ts` |
 | Números | Operaciones > `Number.MAX_SAFE_INTEGER`, exponente límite, incremento perdido, formato | `tests/numbers-save-harness.test.ts` |
-| Guardado | Round-trip v2, migración v1, IDs corruptos/duplicados, versión incompatible, NaN | `tests/numbers-save-harness.test.ts` |
+| Guardado | Round-trip v3, migración v1/v2, estado de especialización inválido, IDs corruptos/duplicados, versión incompatible, NaN | `tests/numbers-save-harness.test.ts` |
 | Harness | Reproducibilidad con la misma estrategia y config | `tests/numbers-save-harness.test.ts` |
 
 ## Escenarios del reporte de balance

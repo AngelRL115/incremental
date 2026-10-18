@@ -3,7 +3,7 @@
 Juego incremental original de partículas. La investigación de ISEPS es una referencia separada; sus fórmulas, interfaz y assets no se copian. El proyecto contiene un motor económico TypeScript independiente de React y un MVP jugable en navegador.
 
 ## Estado
-- **Proyecto:** motor económico, UI Canvas, progresión, guardado local, progreso offline y primer prestigio integrados.
+- **Proyecto:** motor económico, UI Canvas, progresión, guardado local, progreso offline, prestigio y especialización permanente integrados.
 - **IDE previsto:** Visual Studio Code.
 - **Investigación:** fuentes públicas oficiales consultadas el 13 de octubre de 2026; no se tuvo acceso a una partida directa.
 - **Regla de evidencia:** separar características anunciadas, inferencias de diseño y cuestiones desconocidas.
@@ -58,7 +58,7 @@ npx playwright install chromium   # una vez por equipo
 npm run test:e2e
 ```
 
-`npm run balance` imprime los resultados deterministas de los perfiles definidos en `src/game/simulation-harness.ts`. `npm run test:e2e` abre Chromium y verifica compras, desbloqueo de Echo, guardado/recarga, progreso offline, prestigio, importación/exportación, recuperación, concurrencia entre pestañas y comprobaciones axe WCAG AA.
+`npm run balance` imprime los resultados deterministas de los perfiles definidos en `src/game/simulation-harness.ts`. `npm run test:e2e` abre Chromium y verifica compras, desbloqueo de Echo, guardado/recarga, progreso offline, prestigio, especialización, importación/exportación, recuperación, concurrencia entre pestañas, la guía interactiva (incluido axe del popover) y viewport móvil.
 
 Para validar o compilar para despliegue:
 
@@ -79,7 +79,14 @@ proveedor lo requiere. No se ha elegido ni probado un proveedor de hosting.
 ## Estado de las fases
 - Fase 1: investigación pública documentada; economía y funcionamiento directo de ISEPS siguen sin verificar.
 - Fase 2: especificación y motor TypeScript implementados; type-check, tests, balance report y auditoría de dependencias verificados.
-- Fase 3: MVP browser implementado y validado con tests unitarios, balance reproducible y suite Playwright; revisión de VoiceOver/lector de pantalla y cierre formal de QA siguen pendientes.
-- Fase 4: prerrequisitos declarativos, crónica persistente con seis registros originales y migración del payload de guardado v1 a v2; suite y build locales documentados en los reportes de Phase 4. No se declara producción lista mientras queden pendientes los gates manuales del checklist.
+- Fase 3: MVP browser implementado; G1 cerrado para el alcance local single-player. Validación final del 2026-10-14: build, 34 pruebas unitarias, balance y 10 E2E Chromium. VoiceOver/NVDA no se recorrió y, por decisión D12, no fue requisito de cierre; consultar el informe de accesibilidad para los límites.
+- Fase 4: prerrequisitos declarativos, crónica persistente con seis registros originales y migración histórica del payload v1 a v2; evidencia en los reportes de Phase 4.
+- G2: G2-0 y G2-1 completos; reabierto por D20 para especialización original Charge/Echo, tres rangos y RP compartidos con Conduit. No contactar participantes ni ejecutar sesiones hasta validar guía y obtener autorización explícita. Ver `docs/g2-research-plan.md`.
+- G2 previo a participantes: la guía interactiva “Guía del juego” explica
+  recursos, producción, mejoras, hitos, automatización, guardado, prestigio y
+  especialización. Su recorrido completo, axe y ajuste móvil están cubiertos
+  por E2E; el Product Owner debe probar la versión actualizada y confirmar
+  claridad antes de preparar invitaciones.
+- Release: cierre de G1 no significa producción lista ni autoriza publicación; siguen aplicando los gates de `docs/release-checklist.md`.
 
-Las cifras de la economía propia son valores provisionales de balance y se encuentran en `src/game/config.ts`.
+La especialización está aprobada con valores propios: Charge ×1.15/rango o Echo ×1.25/rango y costes de 1/2/3 RP; estos efectos no se atribuyen a ISEPS. El retuning de la economía base sigue pendiente de evidencia de jugadores y aprobación.

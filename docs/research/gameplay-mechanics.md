@@ -55,3 +55,10 @@ Para pasar de publicidad de producto a mecánicas reproducibles, se necesita una
 - **ORIGINAL PROPOSAL:** comenzar con una economía pequeña, explicar cada compra y hacer que las mejoras tengan efectos visibles y testeables.
 - **ORIGINAL PROPOSAL:** usar un árbol corto o mejoras de elección más adelante, porque la existencia promocional de árboles no revela una configuración que debamos reproducir.
 - Mantener eventos, narrativa extensa, múltiples prestigios y automatización avanzada fuera de la primera versión.
+
+## Análisis del XAPK aportado
+
+La inspección estática del paquete confirmó que usa Unity IL2CPP, pero no
+recuperó la lógica del juego ni observó una partida. El alcance, las evidencias
+REA y las incógnitas restantes están en el
+[informe del XAPK](./xapk-analysis-2026-10-17.md).
